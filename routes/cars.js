@@ -7,7 +7,10 @@ import Car from "../models/Car.js";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ====== CORRECT CLOUDINARY STREAM UPLOAD FUNCTION ======
+
+// =========================================
+// CLOUDINARY UPLOAD FUNCTION (FIXED)
+// =========================================
 function uploadToCloudinary(fileBuffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -21,7 +24,11 @@ function uploadToCloudinary(fileBuffer) {
   });
 }
 
-// ========= ADD CAR ==========
+
+
+// =========================================
+// ADD NEW CAR
+// =========================================
 router.post("/add", auth, upload.single("image"), async (req, res) => {
   try {
     let imageUrl = "";
@@ -37,12 +44,18 @@ router.post("/add", auth, upload.single("image"), async (req, res) => {
     });
 
     res.json({ message: "Car added successfully", car });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ========= EDIT CAR ==========
+
+
+
+// =========================================
+// EDIT CAR
+// =========================================
 router.put("/edit/:id", auth, upload.single("image"), async (req, res) => {
   try {
     let updateData = {
@@ -59,12 +72,18 @@ router.put("/edit/:id", auth, upload.single("image"), async (req, res) => {
     });
 
     res.json({ message: "Car updated successfully", updated });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ========= DELETE CAR ==========
+
+
+
+// =========================================
+// DELETE CAR
+// =========================================
 router.delete("/delete/:id", auth, async (req, res) => {
   try {
     await Car.findByIdAndDelete(req.params.id);
@@ -74,12 +93,17 @@ router.delete("/delete/:id", auth, async (req, res) => {
   }
 });
 
-// ========= GET ALL CARS (filters + search + sort) ==========
+
+
+
+// =========================================
+// GET ALL CARS (search + filter + sort)
+// =========================================
 router.get("/", async (req, res) => {
   try {
     const { search, category, rarity, sort } = req.query;
 
-    let query = {};
+    const query = {};
 
     if (search) {
       query.name = { $regex: search, $options: "i" };
@@ -101,9 +125,34 @@ router.get("/", async (req, res) => {
     const cars = await Car.find(query).sort(sortOption);
 
     res.json(cars);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+
+
+// =========================================
+// ⭐ NEW: GET PARTICULAR CAR (BY ID)
+// =========================================
+router.get("/:id", async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).json({ message: "Car not found" });
+    }
+
+    res.json(car);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
 
 export default router;
